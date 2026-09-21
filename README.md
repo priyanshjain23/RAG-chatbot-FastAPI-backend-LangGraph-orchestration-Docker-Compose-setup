@@ -18,40 +18,40 @@ A full-stack RAG (Retrieval-Augmented Generation) application: upload any docume
 ## Architecture
 
 ```
-┌─────────────┐      upload/ask       ┌──────────────────────────────┐
-│   Frontend   │ ───────────────────▶ │           Backend             │
-│ (HTML/JS)    │ ◀─────────────────── │         (FastAPI)             │
-└─────────────┘        answer         │                                │
-                                       │  ┌──────────────────────────┐  │
-                                       │  │      LangGraph            │  │
-                                       │  │  classify → retrieve/chat │  │
-                                       │  └──────────────────────────┘  │
-                                       │       │              │         │
-                                       │       ▼              ▼         │
-                                       │  ┌─────────┐   ┌───────────┐   │
-                                       │  │LlamaIndex│  │ LangChain  │   │
-                                       │  │Retrieval │  │  ChatGroq  │   │
-                                       │  └─────────┘   └───────────┘   │
-                                       │       │                        │
-                                       │       ▼                        │
-                                       │  ┌─────────────────────────┐   │
-                                       │  │  Chroma / Vector Store   │   │
-                                       │  │  (HuggingFace embeddings)│   │
-                                       │  └─────────────────────────┘   │
-                                       └──────────────────────────────┘
+┌─────────────┐      upload/ask       ┌──────────────────────────────────┐
+│   Frontend  │ ───────────────────▶  │           Backend                │
+│ (HTML/JS)   │  ◀─────────────────── │         (FastAPI)              	 │
+└─────────────┘        answer         │                                  │
+                                      │  ┌───────────────────────────┐   │
+                                      │  │      LangGraph            │   │
+                                      │  │  classify → retrieve/chat │   │
+                                      │  └───────────────────────────┘   │
+                                      │       │              │           │
+                                      │       ▼              ▼           │
+                                      │  ┌───────────┐   ┌───────────┐   │
+                                      │  │LlamaIndex │   │ LangChain │   │
+                                      │  │Retrieval  │   │  ChatGroq │   │
+                                      │  └───────────┘   └───────────┘   │
+                                      │       │                          │
+                                      │       ▼                          │
+                                      │  ┌──────────────────────────┐    │
+                                      │  │  Chroma / Vector Store   │    │
+                                      │  │  (HuggingFace embeddings)│    │
+                                      │  └──────────────────────────┘    │
+                                      └──────────────────────────────────┘
 ```
 
 Each stage of the RAG pipeline lives in its own module:
 
-| File | Responsibility |
-|---|---|
-| `app/config.py` | Central settings, env vars, model names |
-| `app/ingestion.py` | Loads and parses uploaded documents |
-| `app/vector_store.py` | Builds/persists the vector index (Chroma-backed) |
-| `app/retrieval.py` | Wraps the index as a query engine (the "R" in RAG) |
-| `app/generation.py` | LLM setup — Groq-hosted models via LangChain and LlamaIndex |
-| `app/graph.py` | LangGraph orchestration — routes between plain chat and document retrieval |
-| `app/main.py` | FastAPI app — exposes `/upload` and `/ask` |
+| File                    | Responsibility                                                              |
+| ----------------------- | --------------------------------------------------------------------------- |
+| `app/config.py`       | Central settings, env vars, model names                                     |
+| `app/ingestion.py`    | Loads and parses uploaded documents                                         |
+| `app/vector_store.py` | Builds/persists the vector index (Chroma-backed)                            |
+| `app/retrieval.py`    | Wraps the index as a query engine (the "R" in RAG)                          |
+| `app/generation.py`   | LLM setup — Groq-hosted models via LangChain and LlamaIndex                |
+| `app/graph.py`        | LangGraph orchestration — routes between plain chat and document retrieval |
+| `app/main.py`         | FastAPI app — exposes`/upload` and `/ask`                              |
 
 ---
 
@@ -105,6 +105,7 @@ Then open `frontend/index.html` directly in your browser.
 ## API Reference
 
 ### `POST /upload`
+
 Uploads a document, replaces any previous document, and rebuilds the vector index.
 
 ```bash
@@ -112,11 +113,13 @@ curl -X POST http://localhost:8000/upload -F "file=@resume.pdf"
 ```
 
 **Response:**
+
 ```json
 { "status": "indexed", "filename": "resume.pdf" }
 ```
 
 ### `POST /ask`
+
 Asks a question about the currently indexed document.
 
 ```bash
@@ -126,6 +129,7 @@ curl -X POST http://localhost:8000/ask \
 ```
 
 **Response:**
+
 ```json
 { "answer": "..." }
 ```
