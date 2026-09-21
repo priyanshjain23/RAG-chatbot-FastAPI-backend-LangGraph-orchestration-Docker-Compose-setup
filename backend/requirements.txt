@@ -2,6 +2,7 @@ fastapi
 uvicorn[standard]
 python-multipart
 llama-index
+llama-index-readers-file
 llama-index-llms-groq
 llama-index-embeddings-huggingface
 langchain-groq
