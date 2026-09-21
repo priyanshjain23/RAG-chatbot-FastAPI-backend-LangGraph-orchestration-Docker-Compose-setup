@@ -1,12 +1,15 @@
 services:
+
   backend:
-    build: ./backend
+    build:
+      context: .
+      dockerfile: backend/Dockerfile
     ports:
       - "8000:8000"
     environment:
       - GROQ_API_KEY=${GROQ_API_KEY}
     volumes:
-      - ./backend/storage:/app/storage  # persist the vector index across restarts
+      - ./backend/storage:/app/storage
 
   frontend:
     build: ./frontend
