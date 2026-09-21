@@ -23,7 +23,7 @@ sessions: dict[str, List[Tuple[str, str]]] = {}
 
 # Formats LlamaIndex's SimpleDirectoryReader can parse out of the box
 # (with the matching optional packages installed — see requirements.txt)
-ALLOWED_EXTENSIONS = {".pdf", ".docx", ".pptx", ".txt", ".md", ".csv"}
+ALLOWED_EXTENSIONS = {".pdf", ".docx", ".txt", ".md"}
 
 
 class Question(BaseModel):
@@ -66,7 +66,12 @@ async def upload_document(file: UploadFile = File(...)):
 def ask(q: Question):
     history = sessions.get(q.session_id, [])
     result = app_graph.invoke(
-        {"question": q.question, "needs_retrieval": False, "answer": "", "history": history},
+        {
+            "question": q.question,
+            "needs_retrieval": False,
+            "answer": "",
+            "history": history,
+        },
         config={"configurable": {"thread_id": q.session_id}},
     )
     answer = result["answer"]

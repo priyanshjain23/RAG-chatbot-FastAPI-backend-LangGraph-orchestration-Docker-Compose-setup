@@ -1,13 +1,77 @@
+# =========================
+# Web API
+# =========================
 fastapi
 uvicorn[standard]
 python-multipart
-llama-index
-llama-index-readers-file
-llama-index-llms-groq
-llama-index-embeddings-huggingface
+
+# =========================
+# LLM / LangChain
+# =========================
+langchain
+langchain-core
+langchain-community
 langchain-groq
+langchain-huggingface
 langgraph
+
+# =========================
+# Embeddings
+# =========================
+sentence-transformers
+transformers
+
+# =========================
+# Vector Database
+# =========================
+chromadb
+langchain-chroma
+
+# =========================
+# PyTorch
+# =========================
+# Installed separately in Docker for CPU/Apple Silicon compatibility
+
+# =========================
+# Document loaders
+# =========================
+
+# PDF
 pypdf
+pdfplumber
+pymupdf
+
+# Microsoft Word (.docx)
 python-docx
+docx2txt
+
+# Microsoft Excel (.xlsx, .xls)
+openpyxl
+xlrd
+
+# Microsoft PowerPoint (.pptx)
 python-pptx
+
+# CSV
 pandas
+
+# HTML
+beautifulsoup4
+lxml
+
+# Markdown / text
+markdown
+
+# JSON
+# Python's built-in json module is sufficient
+
+# =========================
+# RAG / Text processing
+# =========================
+tiktoken
+
+# =========================
+# Utilities
+# =========================
+python-dotenv
+requests
