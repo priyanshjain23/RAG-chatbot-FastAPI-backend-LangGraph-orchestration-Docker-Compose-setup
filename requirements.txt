@@ -14,19 +14,19 @@ langchain-community
 langchain-groq
 langchain-huggingface
 langgraph
-
+llama-index
 # =========================
 # Embeddings
 # =========================
 sentence-transformers
 transformers
-
+llama-index-embeddings-huggingface
 # =========================
 # Vector Database
 # =========================
 chromadb
 langchain-chroma
-
+llama_index.llms.groq
 # =========================
 # PyTorch
 # =========================
