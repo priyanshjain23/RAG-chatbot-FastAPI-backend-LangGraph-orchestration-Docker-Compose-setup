@@ -26,14 +26,11 @@ def classify_node(state: ChatState) -> ChatState:
 
 
 def retrieve_node(state: ChatState) -> ChatState:
-    history = build_history(state["history"])
-    prompt = (
-        f"Previous conversation:\n{history}\n\nCurrent question:\n{state['question']}\n\n"
-        "Answer the current question using the relevant documents."
-        if history
-        else state["question"]
-    )
-    response = get_query_engine().query(prompt)
+    # Retrieval must search using the RAW question only — wrapping it with
+    # history/instructions here would pollute the embedding search, since
+    # LlamaIndex's query engine uses this exact string for both retrieval
+    # AND generation. Mixing in boilerplate text degrades chunk matching.
+    response = get_query_engine().query(state["question"])
     state["answer"] = str(response)
     return state
 
