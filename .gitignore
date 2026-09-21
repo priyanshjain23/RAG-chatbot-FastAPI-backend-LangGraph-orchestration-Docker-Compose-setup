@@ -1,0 +1,25 @@
+.env
+**/storage/
+**/data/*.pdf
+**/data/*.docx
+**/__pycache__/
+**/venv/
+**/node_modules/
+
+
+# Python
+__pycache__/
+*.py[cod]
+*.so
+
+# Virtual environments
+venv/
+.venv/
+env/
+backend/venv/
+
+# Environment variables
+.env
+
+# macOS
+.DS_Store

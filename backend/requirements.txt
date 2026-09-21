@@ -1,0 +1,12 @@
+fastapi
+uvicorn[standard]
+python-multipart
+llama-index
+llama-index-llms-groq
+llama-index-embeddings-huggingface
+langchain-groq
+langgraph
+pypdf
+python-docx
+python-pptx
+pandas

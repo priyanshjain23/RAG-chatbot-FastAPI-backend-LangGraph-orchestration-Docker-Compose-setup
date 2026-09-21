@@ -1,0 +1,235 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<title>NeuroChat</title>
+<style>
+  * { box-sizing: border-box; }
+  body {
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", system-ui, sans-serif;
+    max-width: 640px;
+    margin: 40px auto;
+    background: #0b0b0f;
+    color: #e8e8e8;
+  }
+  h2 { font-weight: 600; letter-spacing: -0.02em; margin-bottom: 4px; }
+  .subtitle { color: #888; font-size: 0.9em; margin-bottom: 20px; }
+
+  #upload-box {
+    margin-bottom: 16px;
+    padding: 14px;
+    border: 1px dashed #333;
+    border-radius: 12px;
+    background: #131318;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    flex-wrap: wrap;
+  }
+  #fileInput { color: #ccc; flex: 1; min-width: 160px; }
+  #uploadBtn {
+    padding: 8px 16px;
+    border-radius: 8px;
+    border: none;
+    background: #3b7cf0;
+    color: white;
+    cursor: pointer;
+    font-weight: 500;
+  }
+  #uploadBtn:hover { background: #2f68d1; }
+  #uploadStatus { width: 100%; font-size: 0.85em; color: #9ae6b4; min-height: 18px; }
+
+  #chat {
+    border: 1px solid #262626;
+    border-radius: 14px;
+    height: 440px;
+    overflow-y: auto;
+    padding: 16px;
+    margin-bottom: 14px;
+    background: #131318;
+    display: flex;
+    flex-direction: column;
+    gap: 14px;
+  }
+  .row { display: flex; flex-direction: column; max-width: 82%; }
+  .row.user { align-self: flex-end; align-items: flex-end; }
+  .row.bot { align-self: flex-start; align-items: flex-start; }
+  .row.system { align-self: center; max-width: 90%; align-items: center; }
+
+  .label { font-size: 0.72em; color: #777; margin-bottom: 4px; padding: 0 4px; }
+  .msg {
+    padding: 10px 14px;
+    border-radius: 14px;
+    line-height: 1.45;
+    font-size: 0.95em;
+    white-space: pre-wrap;
+  }
+  .row.user .msg { background: #3b7cf0; color: white; border-bottom-right-radius: 4px; }
+  .row.bot .msg { background: #1e1e26; border-bottom-left-radius: 4px; }
+  .row.system .msg {
+    background: transparent;
+    color: #7dd3a0;
+    font-size: 0.82em;
+    padding: 4px 10px;
+  }
+  .msg b { font-weight: 600; }
+  .msg ul { margin: 4px 0; padding-left: 20px; }
+
+  form { display: flex; gap: 8px; }
+  input#input {
+    flex: 1;
+    padding: 12px 14px;
+    border-radius: 10px;
+    border: 1px solid #2a2a2a;
+    background: #131318;
+    color: #eee;
+    font-size: 0.95em;
+  }
+  input#input:focus { outline: none; border-color: #3b7cf0; }
+  button[type="submit"] {
+    padding: 10px 18px;
+    border-radius: 10px;
+    border: none;
+    background: #3b7cf0;
+    color: white;
+    cursor: pointer;
+    font-weight: 500;
+  }
+  button[type="submit"]:hover { background: #2f68d1; }
+</style>
+</head>
+<body>
+  <h2>NeuraChat</h2>
+  <div class="subtitle">Upload a document, then ask anything about it.</div>
+
+  <div id="upload-box">
+    <input type="file" id="fileInput" accept=".pdf,.docx,.pptx,.txt,.md,.csv" />
+    <button id="uploadBtn">Upload document</button>
+    <div id="uploadStatus"></div>
+  </div>
+
+  <div id="chat"></div>
+  <form id="form">
+    <input id="input" placeholder="Ask a question..." autocomplete="off" />
+    <button type="submit">Send</button>
+  </form>
+
+<script>
+  const API_BASE = "http://localhost:8000";
+  const chat = document.getElementById("chat");
+  const form = document.getElementById("form");
+  const input = document.getElementById("input");
+  let sessionId = generateId();
+
+  // crypto.randomUUID() only works in a "secure context" (HTTPS or exactly
+  // http://localhost) — this avoids that restriction entirely
+  function generateId() {
+    return "id-" + Date.now() + "-" + Math.random().toString(36).slice(2);
+  }
+
+  const fileInput = document.getElementById("fileInput");
+  const uploadBtn = document.getElementById("uploadBtn");
+  const uploadStatus = document.getElementById("uploadStatus");
+
+  // Very light markdown-ish formatting: **bold**, line breaks, "- " bullet lists
+  function formatMessage(text) {
+    let safe = text
+      .replace(/&/g, "&amp;")
+      .replace(/</g, "&lt;")
+      .replace(/>/g, "&gt;");
+    safe = safe.replace(/\*\*(.+?)\*\*/g, "<b>$1</b>");
+    const lines = safe.split("\n");
+    let html = "";
+    let inList = false;
+    for (const line of lines) {
+      const trimmed = line.trim();
+      if (trimmed.startsWith("- ") || trimmed.startsWith("* ")) {
+        if (!inList) { html += "<ul>"; inList = true; }
+        html += `<li>${trimmed.slice(2)}</li>`;
+      } else {
+        if (inList) { html += "</ul>"; inList = false; }
+        html += (trimmed ? trimmed : "<br>") + "\n";
+      }
+    }
+    if (inList) html += "</ul>";
+    return html;
+  }
+
+  function addMessage(text, sender, label) {
+    const row = document.createElement("div");
+    row.className = "row " + sender;
+    if (label) {
+      const labelEl = document.createElement("div");
+      labelEl.className = "label";
+      labelEl.textContent = label;
+      row.appendChild(labelEl);
+    }
+    const bubble = document.createElement("div");
+    bubble.className = "msg";
+    bubble.innerHTML = formatMessage(text);
+    row.appendChild(bubble);
+    chat.appendChild(row);
+    chat.scrollTop = chat.scrollHeight;
+  }
+
+  uploadBtn.addEventListener("click", async () => {
+    const file = fileInput.files[0];
+    if (!file) {
+      uploadStatus.textContent = "Choose a file first.";
+      return;
+    }
+    uploadBtn.disabled = true;
+    uploadStatus.textContent = "Uploading and indexing... this can take a few seconds.";
+
+    const formData = new FormData();
+    formData.append("file", file);
+
+    try {
+      const res = await fetch(`${API_BASE}/upload`, { method: "POST", body: formData });
+      const data = await res.json();
+
+      if (data.error) {
+        uploadStatus.textContent = "Error: " + data.error;
+      } else {
+        uploadStatus.textContent = "";
+
+        // Fresh document = fresh conversation, both visually and server-side
+        chat.innerHTML = "";
+        sessionId = generateId();
+
+        addMessage(`Document uploaded successfully: ${data.filename}`, "system");
+        addMessage(
+          `Hi, this is **NeuraChat**! How can I help you with **${data.filename}**?`,
+          "bot",
+          "NeuraChat"
+        );
+      }
+    } catch (err) {
+      uploadStatus.textContent = "Upload failed — is the backend running?";
+    } finally {
+      uploadBtn.disabled = false;
+    }
+  });
+
+  form.addEventListener("submit", async (e) => {
+    e.preventDefault();
+    const question = input.value.trim();
+    if (!question) return;
+    addMessage(question, "user", "You");
+    input.value = "";
+
+    try {
+      const res = await fetch(`${API_BASE}/ask`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ question, session_id: sessionId }),
+      });
+      const data = await res.json();
+      addMessage(data.answer, "bot", "NeuraChat");
+    } catch (err) {
+      addMessage("Error: could not reach the backend.", "bot", "NeuraChat");
+    }
+  });
+</script>
+</body>
+</html>
